@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Quiz</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --or:#f97316;--or-l:#fff7ed;--or-d:#ea6c0a;
+      --bg:#fafaf9;--card:#fff;--text:#1c1917;--muted:#78716c;
+      --border:#e7e5e4;--green:#16a34a;--red:#dc2626;
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .screen{display:none;min-height:100vh;padding:40px 20px;opacity:0}
+    .screen.active{display:flex;flex-direction:column;align-items:center;animation:fadeInUp .35s ease forwards}
+    .screen.leaving{display:flex;flex-direction:column;align-items:center;animation:fadeOut .22s ease forwards;pointer-events:none}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+
+    /* ─── SPLASH ─── */
+    #splash{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;pointer-events:none;animation:splashFade .55s ease forwards 2.3s}
+    .splash-text{font-size:clamp(32px,6vw,60px);font-weight:800;color:var(--text);letter-spacing:-.02em;animation:splashText 2.1s ease forwards}
+    .splash-text span{color:var(--or)}
+    @keyframes splashText{0%{opacity:0;transform:translateY(14px)}20%{opacity:1;transform:translateY(0)}72%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px)}}
+    @keyframes splashFade{to{opacity:0;visibility:hidden}}
+
+    /* ─── HERO ─── */
+    #s-hero{justify-content:center;text-align:center}
+    .tag{display:inline-block;background:var(--or-l);color:var(--or);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:20px;margin-bottom:24px}
+    .hero-h{font-size:clamp(26px,5vw,52px);font-weight:800;line-height:1.15;max-width:640px;margin-bottom:16px}
+    .hero-h span{color:var(--or)}
+    .hero-sub{color:var(--muted);font-size:17px;max-width:460px;line-height:1.6;margin-bottom:40px}
+
+    /* ─── BUTTONS ─── */
+    .btn{border:none;padding:14px 36px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:none}
+    .btn-orange{background:var(--or);color:#fff}
+    .btn-orange:hover{background:var(--or-d)}
+    .btn-outline{background:var(--card);color:var(--text);border:2px solid var(--border)}
+    .btn-outline:hover{border-color:var(--or)}
+    .btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+    /* ─── LEVELS ─── */
+    #s-levels{justify-content:center;padding-top:60px}
+    .wrap{width:100%;max-width:780px;text-align:center}
+    .p-label{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .p-title{font-size:28px;font-weight:700;margin-bottom:8px}
+    .p-sub{color:var(--muted);font-size:15px;margin-bottom:40px}
+    .grid{display:flex;flex-wrap:nowrap;gap:14px;justify-content:center}
+    .lcard{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .12s;width:120px;flex-shrink:0}
+    .lcard:hover{border-color:var(--or);box-shadow:0 4px 20px rgba(249,115,22,.13);transform:translateY(-2px)}
+    .lbadge{font-size:28px;font-weight:800;color:var(--or);margin-bottom:6px}
+    .ldesc{font-size:13px;color:var(--muted)}
+
+    /* ─── SHARED CONTENT ─── */
+    .back-btn{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0;margin-bottom:28px;display:flex;align-items:center;gap:6px;transition:color .15s}
+    .back-btn:hover{color:var(--text)}
+    .prog-bar{width:100%;height:4px;background:var(--border);border-radius:2px;margin-bottom:32px;overflow:hidden}
+    .prog-fill{height:100%;background:var(--or);border-radius:2px;transition:width .35s ease}
+    .d-meta{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .d-num{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+    .d-badge{font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;background:var(--or-l);color:var(--or)}
+    .d-title{font-size:22px;font-weight:700;margin-bottom:22px}
+
+    /* ─── DIALOG ─── */
+    #s-dialog{padding-top:40px}
+    .dialog-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:32px}
+    .d-line{display:flex;gap:12px;margin-bottom:14px}
+    .d-line:last-child{margin-bottom:0}
+    .spk{font-weight:700;color:var(--or);min-width:20px;font-size:15px;padding-top:1px}
+    .spt{font-size:15px;line-height:1.65}
+
+    /* ─── QUESTIONS ─── */
+    #s-questions{padding-top:40px}
+    .q-list{display:flex;flex-direction:column;gap:20px;margin-bottom:28px}
+    .q-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
+    .q-text{font-size:16px;font-weight:600;margin-bottom:14px;line-height:1.4}
+    .opts{display:flex;flex-direction:column;gap:8px}
+    .opt{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:15px;line-height:1.4;transition:border-color .12s,background .12s}
+    .opt:hover{border-color:var(--or);background:var(--or-l)}
+    .opt input{margin-top:2px;accent-color:var(--or);flex-shrink:0}
+    .opt.correct{border-color:var(--green)!important;background:#f0fdf4!important}
+    .opt.wrong{border-color:var(--red)!important;background:#fef2f2!important}
+    .opt.locked{cursor:default;pointer-events:none}
+    .score-banner{background:var(--or-l);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:14px 18px;margin-bottom:22px;font-size:15px;display:none}
+    .score-banner.show{display:block}
+    .score-t{font-weight:600;color:var(--or-d)}
+    .warn-banner{background:#fef2f2;border:1px solid rgba(220,38,38,.25);border-radius:12px;padding:14px 18px;margin-bottom:22px;font-size:15px;font-weight:600;color:var(--red);display:none;align-items:center;gap:10px}
+    .warn-banner.show{display:flex}
+
+    /* ─── COMPLETE ─── */
+    #s-done{justify-content:center;text-align:center}
+    .done-icon{font-size:56px;margin-bottom:20px}
+    .done-h{font-size:26px;font-weight:700;margin-bottom:10px}
+    .done-sub{color:var(--muted);font-size:15px;line-height:1.6;max-width:400px;margin-bottom:10px}
+    .done-score{font-size:20px;font-weight:700;color:var(--or);margin-bottom:36px}
+  </style>
+</head>
+<body>
+
+<!-- ═══ SPLASH ═══ -->
+<div id="splash">
+  <div class="splash-text">English <span>Quiz</span></div>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<div id="s-hero" class="screen active">
+  <div class="tag">English Level Quiz</div>
+  <h1 class="hero-h">Test how well you understand <span>English</span></h1>
+  <p class="hero-sub">Read real everyday dialogs — formal, slang, and native-speaker style — then answer comprehension questions.</p>
+  <button class="btn btn-orange" onclick="showLevels()">Choose your level</button>
+</div>
+
+<!-- ═══ LEVELS ═══ -->
+<div id="s-levels" class="screen">
+  <div class="wrap">
+    <p class="p-label">English quiz</p>
+    <h2 class="p-title">Choose a level</h2>
+    <p class="p-sub">Each level has 3 dialogs and 9 questions total.</p>
+    <div class="grid" id="level-grid"></div>
+  </div>
+</div>
+
+<!-- ═══ DIALOG ═══ -->
+<div id="s-dialog" class="screen">
+  <div class="wrap">
+    <button class="back-btn" onclick="showLevels()">← Back to levels</button>
+    <div class="prog-bar"><div class="prog-fill" id="pf-d"></div></div>
+    <div class="d-meta"><span class="d-num" id="dn-d"></span><span class="d-badge" id="db-d"></span></div>
+    <h2 class="d-title" id="dt-d"></h2>
+    <div class="dialog-box" id="dialog-content"></div>
+    <button class="btn btn-orange" onclick="showQuestions()">Go to questions →</button>
+  </div>
+</div>
+
+<!-- ═══ QUESTIONS ═══ -->
+<div id="s-questions" class="screen">
+  <div class="wrap">
+    <button class="back-btn" onclick="backToDialog()">← Back to dialog</button>
+    <div class="prog-bar"><div class="prog-fill" id="pf-q"></div></div>
+    <div class="d-meta"><span class="d-num" id="dn-q"></span><span class="d-badge" id="db-q"></span></div>
+    <h2 class="d-title">Questions</h2>
+    <div class="warn-banner" id="warn-banner">&#10071; Please answer all questions before checking.</div>
+    <div class="score-banner" id="score-banner"><span class="score-t" id="score-text"></span></div>
+    <div class="q-list" id="q-list"></div>
+    <div class="btn-row">
+      <button class="btn btn-orange" id="check-btn" onclick="checkAnswers()">Check answers</button>
+      <button class="btn btn-orange" id="next-btn" style="display:none" onclick="nextDialog()">Next dialog →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ COMPLETE ═══ -->
+<div id="s-done" class="screen">
+  <div class="done-icon">🎉</div>
+  <h2 class="done-h" id="done-h"></h2>
+  <p class="done-sub" id="done-sub">You've finished all three dialogs for this level.</p>
+  <p class="done-score" id="done-score"></p>
+  <div class="btn-row">
+    <button class="btn btn-orange" onclick="showLevels()">Try other levels</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+const LEVELS = {
+  A1: {
+    label: 'Beginner',
+    dialogs: [
+      {
+        title: 'Airport Conversation',
+        type: 'No slang',
+        lines: [
+          {s:'A', t:'Hello. Where is the check-in desk?'},
+          {s:'B', t:"It's over there, near the big sign."},
+          {s:'A', t:'Thank you. Do I need my passport?'},
+          {s:'B', t:'Yes, please. Here is your boarding pass.'},
+          {s:'A', t:'Thank you very much.'}
+        ],
+        questions: [
+          { q:'Where is the check-in desk?',
+            opts:['Near the exit.','Near the big sign.','At the café.'], correct:1 },
+          { q:'Do I need my passport?',
+            opts:["No, you don't.",'Yes, please.','Only your ticket.'], correct:1 },
+          { q:'What do I get after check-in?',
+            opts:['A suitcase.','A boarding pass.','A map.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Hotel Conversation',
+        type: 'With slang',
+        lines: [
+          {s:'A', t:'Hey, is my room ready yet?'},
+          {s:'B', t:"Yeah, it's all set. Here's your key, room 205."},
+          {s:'A', t:'Awesome! Is there Wi-Fi?'},
+          {s:'B', t:"Totally, it's free. The password's on the card."},
+          {s:'A', t:'Cool, thanks a bunch!'}
+        ],
+        questions: [
+          { q:'Is my room ready?',
+            opts:['No, wait 1 hour.',"Yes, it's all set.",'Sorry, no rooms.'], correct:1 },
+          { q:'Is there Wi-Fi in the room?',
+            opts:['No, only in the lobby.',"Yes, but it's not free.",'Totally, it\'s free.'], correct:2 },
+          { q:'Where can I find the Wi-Fi password?',
+            opts:['Ask the manager.',"It's on the card.",'It\'s on the TV.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Tour Guide Conversation',
+        type: 'Native mistakes',
+        lines: [
+          {s:'A', t:'So, we go to the museum now, yes?'},
+          {s:'B', t:"Yes, we go there now. It's very nice place."},
+          {s:'A', t:'How long we stay there?'},
+          {s:'B', t:'We stay about one hour. Maybe more, if you like.'},
+          {s:'A', t:'Ok, thank you. You speak good English!'},
+          {s:'B', t:'Thank you! I try my best.'}
+        ],
+        questions: [
+          { q:'Where are we going now?',
+            opts:['To the restaurant.','To the museum.','To the park.'], correct:1 },
+          { q:'How long will we stay at the museum?',
+            opts:['5 hours.','About one hour.','All day.'], correct:1 },
+          { q:"Do you like your job?",
+            opts:['Yes, I love it!',"No, I don't like it.",'I try my best.'], correct:2 }
+        ]
+      }
+    ]
+  },
+
+  A2: {
+    label: 'Elementary',
+    dialogs: [
+      {
+        title: 'Airport Conversation',
+        type: 'No slang',
+        lines: [
+          {s:'A', t:'Excuse me, where is Gate 12?'},
+          {s:'B', t:"It's down the hall, on the left."},
+          {s:'A', t:'Thank you. Is the flight on time?'},
+          {s:'B', t:'Yes, it is. You have 20 minutes.'},
+          {s:'A', t:'Great, thank you for your help.'}
+        ],
+        questions: [
+          { q:'Where is Gate 12?',
+            opts:['Upstairs.','Down the hall, on the left.','Near the café.'], correct:1 },
+          { q:'Is the flight on time?',
+            opts:['No, it is late.','Yes, it is.',"I don't know."], correct:1 },
+          { q:'How much time does the passenger have?',
+            opts:['5 minutes.','20 minutes.','1 hour.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Hotel Conversation',
+        type: 'With slang',
+        lines: [
+          {s:'A', t:'Hey, can I get a wake-up call for 7 a.m.?'},
+          {s:'B', t:"No worries, I'll sort that out for you."},
+          {s:'A', t:'Awesome! Also, is there a place to grab some grub nearby?'},
+          {s:'B', t:"Totally, there's a cool café just around the corner."},
+          {s:'A', t:'Sweet, thanks a bunch!'}
+        ],
+        questions: [
+          { q:'What does the guest ask for?',
+            opts:['A taxi.','A wake-up call.','A late check-out.'], correct:1 },
+          { q:'What does the guest want to know about food?',
+            opts:['If there is a restaurant in the hotel.','If there is a place to get food nearby.','If breakfast is free.'], correct:1 },
+          { q:'How does the guest feel about the help?',
+            opts:['Angry.','Happy and thankful.','Bored.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Tour Guide Conversation',
+        type: 'Native mistakes',
+        lines: [
+          {s:'A', t:'So, we go to the museum now, yeah?'},
+          {s:'B', t:"Yes, we go there now. It's very nice place."},
+          {s:'A', t:'How long we stay there?'},
+          {s:'B', t:'We stay about one hour. Maybe more, if you like.'},
+          {s:'A', t:'Ok, thank you. You speak good English!'},
+          {s:'B', t:'Thank you! I try my best.'}
+        ],
+        questions: [
+          { q:'Where are they going now?',
+            opts:['To a restaurant.','To a museum.','To a park.'], correct:1 },
+          { q:'How long will they stay at the museum?',
+            opts:['5 minutes.','About one hour.','All day.'], correct:1 },
+          { q:"What does the tourist say about the guide's English?",
+            opts:['It is bad.','It is good.','It is difficult to understand.'], correct:1 }
+        ]
+      }
+    ]
+  },
+
+  B1: {
+    label: 'Intermediate',
+    dialogs: [
+      {
+        title: 'Airport Conversation',
+        type: 'No slang',
+        lines: [
+          {s:'A', t:'Excuse me, could you tell me where the baggage claim area is?'},
+          {s:'B', t:'Sure, it\'s just after you go through customs. Follow the signs for «Arrivals».'},
+          {s:'A', t:'Thank you. Do I need to declare anything if I have some souvenirs?'},
+          {s:'B', t:"Only if they are alcohol or tobacco. Otherwise, you're fine."},
+          {s:'A', t:"Got it. Thanks for your help."}
+        ],
+        questions: [
+          { q:'Where is the baggage claim area?',
+            opts:['Near the check-in desks.','After customs, follow the «Arrivals» signs.','At the security checkpoint.'], correct:1 },
+          { q:'What items must be declared?',
+            opts:['Souvenirs and clothes.','Only alcohol or tobacco.','All food and drinks.'], correct:1 },
+          { q:'How does the passenger respond to the help?',
+            opts:['Asks another question.','Says «Thank you».','Walks away silently.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Hotel Conversation',
+        type: 'With slang',
+        lines: [
+          {s:'A', t:'Hey, is it possible to check in a bit earlier? My flight got in super early.'},
+          {s:'B', t:'Let me check... Yeah, no worries, we can hook you up with your room now.'},
+          {s:'A', t:"Awesome, thanks a ton! By the way, is there a cool place nearby to grab a bite?"},
+          {s:'B', t:"Totally, there's a sick burger joint just around the corner."},
+          {s:'A', t:"Perfect, I'll check it out. Appreciate it!"}
+        ],
+        questions: [
+          { q:'What does the guest ask for first?',
+            opts:['A late check-out.','An early check-in.','A room with a view.'], correct:1 },
+          { q:'How does the receptionist respond to the early check-in request?',
+            opts:["Says it's not possible.",'Checks and agrees to help.','Asks for extra payment.'], correct:1 },
+          { q:'What does the guest want to know about food?',
+            opts:['If breakfast is included.','If there is a good place to eat nearby.','If room service is available 24/7.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Tour Guide Conversation',
+        type: 'Native mistakes',
+        lines: [
+          {s:'A', t:"So, we're heading to the museum now, right?"},
+          {s:'B', t:"Yes, we go there now. It's very interesting place, you will like it."},
+          {s:'A', t:'How long are we supposed to stay there?'},
+          {s:'B', t:'We stay about one hour. Maybe more, if you like.'},
+          {s:'A', t:'Sounds good. Thanks for being so helpful!'},
+          {s:'B', t:'Thank you! I try my best.'}
+        ],
+        questions: [
+          { q:'Where are they going now?',
+            opts:['To a restaurant.','To a museum.','To a shopping center.'], correct:1 },
+          { q:'How long will they stay at the museum?',
+            opts:['30 minutes.','About one hour.','Two hours or more.'], correct:1 },
+          { q:"What does the tourist say about the guide's help?",
+            opts:['It is not helpful.','It is very helpful.','It is too fast.'], correct:1 }
+        ]
+      }
+    ]
+  },
+
+  B2: {
+    label: 'Upper Intermediate',
+    dialogs: [
+      {
+        title: 'Airport Conversation',
+        type: 'No slang',
+        lines: [
+          {s:'A', t:'Excuse me, could you tell me if the flight to Berlin is on schedule?'},
+          {s:'B', t:"Let me check the system... Yes, it's on time. However, there might be a short delay at the gate."},
+          {s:'A', t:'I see. Do I need to go through passport control again for my connecting flight?'},
+          {s:'B', t:'Yes, you will. Please follow the signs for «Transit» after you collect your luggage.'},
+          {s:'A', t:'Thank you for clarifying that.'}
+        ],
+        questions: [
+          { q:'What is the passenger asking about?',
+            opts:['The price of the ticket.','The status of the flight.','The location of the restaurant.'], correct:1 },
+          { q:'What does the assistant say about the flight?',
+            opts:['It is cancelled.','It is on time, but there might be a short delay.','It is very late.'], correct:1 },
+          { q:'What must the passenger do for the connecting flight?',
+            opts:['Go through passport control.','Buy a new ticket.','Wait in the lounge.'], correct:0 }
+        ]
+      },
+      {
+        title: 'Hotel Conversation',
+        type: 'With slang',
+        lines: [
+          {s:'A', t:"Hey, is it possible to get a late checkout? I've got a super late flight tonight."},
+          {s:'B', t:"No worries, we can totally sort that out for you. Just let us know when you're ready to leave."},
+          {s:'A', t:"Awesome, thanks a bunch! Also, is there a cool spot nearby where I can grab a drink or a bite?"},
+          {s:'B', t:"Yeah, there's a wicked pub just down the street. It's always buzzing in the evenings."},
+          {s:'A', t:"Sounds perfect. I'll check it out. Cheers!"}
+        ],
+        questions: [
+          { q:'What does the guest ask for?',
+            opts:['An early check-in.','A late check-out.','A different room.'], correct:1 },
+          { q:'How does the receptionist respond to the request?',
+            opts:['Says it is not possible.','Agrees to help and says it is no problem.','Asks for extra money.'], correct:1 },
+          { q:'What does the guest want to know about nearby?',
+            opts:['If there is a bank.','If there is a good place to eat or drink.','If there is a supermarket.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Tour Guide Conversation',
+        type: 'Native mistakes',
+        lines: [
+          {s:'A', t:"So, we're heading to the museum now, are we?"},
+          {s:'B', t:"Yes, we go there now. It's very interesting place, you will like it."},
+          {s:'A', t:'How long are we supposed to stay there?'},
+          {s:'B', t:'We stay about one hour. Maybe more, if you like.'},
+          {s:'A', t:'Sounds good. Thanks for being so helpful!'},
+          {s:'B', t:'Thank you! I try my best.'}
+        ],
+        questions: [
+          { q:'Where are they going now?',
+            opts:['To a restaurant.','To a museum.','To a park.'], correct:1 },
+          { q:'How long will they stay at the museum?',
+            opts:['About one hour.','All day.','Only 15 minutes.'], correct:0 },
+          { q:'What does the tourist think about the guide?',
+            opts:['The guide is not helpful.','The guide is very helpful.','The guide speaks too fast.'], correct:1 }
+        ]
+      }
+    ]
+  },
+
+  C1: {
+    label: 'Advanced',
+    dialogs: [
+      {
+        title: 'Airport Conversation',
+        type: 'No slang',
+        lines: [
+          {s:'A', t:"Excuse me, I was wondering if you could clarify the procedure for baggage reclaim. I have a connecting flight, and I'm a bit pressed for time."},
+          {s:'B', t:"Certainly. Once you disembark, you'll need to follow the signs for Arrivals and proceed through customs. If your luggage is checked through to your final destination, you can skip the baggage hall and head straight to the transit area."},
+          {s:'A', t:"That's very helpful, thank you. One more thing — do I need to collect my boarding pass for the next leg here, or will it be issued at the gate?"},
+          {s:'B', t:"It should be issued at the gate, but I'd recommend checking with the information desk just to be on the safe side."}
+        ],
+        questions: [
+          { q:'What is the passenger mainly concerned about?',
+            opts:['The price of his ticket.','The procedure for his connecting flight and baggage.','The location of the nearest restaurant.'], correct:1 },
+          { q:'According to the assistant, what can the passenger skip if his luggage is checked through?',
+            opts:['Security.','The baggage hall.','Passport control.'], correct:1 },
+          { q:'What does the assistant recommend the passenger do about his next boarding pass?',
+            opts:['Buy a new one.','Check with the information desk.','Wait at the gate and do nothing.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Hotel Conversation',
+        type: 'With slang',
+        lines: [
+          {s:'A', t:"Hey, is it possible to get a late checkout? I've got a red-eye tonight and could really use the extra Zs."},
+          {s:'B', t:"No dramas, we can totally hook you up with a late checkout. Just let the front desk know when you're ready to hit the road."},
+          {s:'A', t:"You're a legend! Also, is there a decent place nearby where I can grab a bite or a cold one before I head out?"},
+          {s:'B', t:"Absolutely, there's a cracking little gastropub just around the corner. It's always buzzing in the evenings."},
+          {s:'A', t:"Sick! I'll check it out. Cheers!"}
+        ],
+        questions: [
+          { q:'What does the guest ask for?',
+            opts:['An early check-in.','A wake-up call.','A late check-out.'], correct:2 },
+          { q:'How does the receptionist describe the nearby pub?',
+            opts:['It is very expensive.','It is quiet and empty.','It is excellent and always busy in the evenings.'], correct:2 },
+          { q:'What slang term does the guest use to describe the receptionist\'s help?',
+            opts:['A star.','A legend.','A professional.'], correct:1 }
+        ]
+      },
+      {
+        title: 'Tour Guide Conversation',
+        type: 'Native mistakes',
+        lines: [
+          {s:'A', t:"So, we're making our way to the museum now, are we?"},
+          {s:'B', t:"Yes, we go there now. It's very interesting place, with lots of history."},
+          {s:'A', t:"How long are we scheduled to spend there? I'd like to make sure I have enough time for the gift shop."},
+          {s:'B', t:"We stay about one hour. Maybe more, if you like and we are not too much in a hurry."},
+          {s:'A', t:'Sounds good. Thanks for being so accommodating!'},
+          {s:'B', t:'Thank you! I try my best to make it good for you.'}
+        ],
+        questions: [
+          { q:'Where are they going?',
+            opts:['To a park.','To a museum.','To a restaurant.'], correct:1 },
+          { q:'How long are they scheduled to stay at the museum?',
+            opts:['About one hour.','All day.','Only 15 minutes.'], correct:0 },
+          { q:"What is one of the guide's grammatical mistakes?",
+            opts:['"We stay" instead of "We will stay".','"We go" instead of "We are going".','Both a and b.'], correct:2 }
+        ]
+      }
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let lvl = null, dIdx = 0, totalScore = 0, checked = false;
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function show(id) {
+  const current = document.querySelector('.screen.active');
+  const next = document.getElementById(id);
+  if (current === next) return;
+  if (current) {
+    current.classList.remove('active');
+    current.classList.add('leaving');
+    setTimeout(() => {
+      current.classList.remove('leaving');
+      next.classList.add('active');
+      window.scrollTo(0,0);
+    }, 220);
+  } else {
+    next.classList.add('active');
+    window.scrollTo(0,0);
+  }
+}
+
+function showLevels() {
+  show('s-levels');
+}
+
+function startLevel(key) {
+  lvl = key; dIdx = 0; totalScore = 0;
+  renderDialog();
+}
+
+function renderDialog() {
+  const d = LEVELS[lvl].dialogs[dIdx];
+  const total = LEVELS[lvl].dialogs.length;
+  const pct = ((dIdx) / total) * 100;
+
+  document.getElementById('pf-d').style.width = pct + '%';
+  document.getElementById('dn-d').textContent = `Dialog ${dIdx+1} of ${total}`;
+  document.getElementById('db-d').textContent = d.type;
+  document.getElementById('dt-d').textContent = d.title;
+
+  const box = document.getElementById('dialog-content');
+  box.innerHTML = d.lines.map(l =>
+    `<div class="d-line"><span class="spk">${l.s}:</span><span class="spt">${l.t}</span></div>`
+  ).join('');
+
+  show('s-dialog');
+}
+
+function showQuestions() {
+  const d = LEVELS[lvl].dialogs[dIdx];
+  const total = LEVELS[lvl].dialogs.length;
+  const pct = ((dIdx + 0.5) / total) * 100;
+
+  checked = false;
+  document.getElementById('pf-q').style.width = pct + '%';
+  document.getElementById('dn-q').textContent = `Dialog ${dIdx+1} of ${total}`;
+  document.getElementById('db-q').textContent = d.type;
+
+  const banner = document.getElementById('score-banner');
+  banner.classList.remove('show');
+  document.getElementById('warn-banner').classList.remove('show');
+
+  const checkBtn = document.getElementById('check-btn');
+  const nextBtn = document.getElementById('next-btn');
+  checkBtn.style.display = '';
+  nextBtn.style.display = 'none';
+
+  const list = document.getElementById('q-list');
+  list.innerHTML = d.questions.map((q, qi) => `
+    <div class="q-card" id="qc-${qi}">
+      <div class="q-text">${qi+1}. ${q.q}</div>
+      <div class="opts">
+        ${q.opts.map((opt, oi) => `
+          <label class="opt" id="opt-${qi}-${oi}">
+            <input type="radio" name="q${qi}" value="${oi}" />
+            ${opt}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  show('s-questions');
+}
+
+function checkAnswers() {
+  if (checked) return;
+  const d = LEVELS[lvl].dialogs[dIdx];
+
+  const unanswered = d.questions.some((_, qi) =>
+    !document.querySelector(`input[name="q${qi}"]:checked`)
+  );
+  const warn = document.getElementById('warn-banner');
+  if (unanswered) {
+    warn.classList.add('show');
+    warn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  warn.classList.remove('show');
+
+  let score = 0;
+
+  d.questions.forEach((q, qi) => {
+    const sel = document.querySelector(`input[name="q${qi}"]:checked`);
+    const chosen = sel ? parseInt(sel.value) : -1;
+
+    q.opts.forEach((_, oi) => {
+      const el = document.getElementById(`opt-${qi}-${oi}`);
+      el.classList.add('locked');
+      if (oi === q.correct) el.classList.add('correct');
+      else if (oi === chosen && chosen !== q.correct) el.classList.add('wrong');
+    });
+
+    if (chosen === q.correct) score++;
+  });
+
+  totalScore += score;
+  checked = true;
+
+  const banner = document.getElementById('score-banner');
+  document.getElementById('score-text').textContent =
+    `You got ${score} out of ${d.questions.length} correct on this dialog.`;
+  banner.classList.add('show');
+
+  document.getElementById('check-btn').style.display = 'none';
+
+  const isLast = dIdx === LEVELS[lvl].dialogs.length - 1;
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = '';
+  nextBtn.textContent = isLast ? 'See results →' : 'Next dialog →';
+}
+
+function nextDialog() {
+  dIdx++;
+  if (dIdx >= LEVELS[lvl].dialogs.length) {
+    showComplete();
+  } else {
+    renderDialog();
+  }
+}
+
+function backToDialog() {
+  renderDialog();
+}
+
+function showComplete() {
+  const total = LEVELS[lvl].dialogs.length * 3;
+  const pct = Math.round((totalScore / total) * 100);
+
+  document.getElementById('done-h').textContent = `Level ${lvl} complete!`;
+  document.getElementById('done-score').textContent =
+    `${totalScore} / ${total} correct — ${pct}%`;
+
+  show('s-done');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+// Build grid immediately, show screen after splash finishes
+(function buildGrid() {
+  const grid = document.getElementById('level-grid');
+  grid.innerHTML = '';
+  Object.entries(LEVELS).forEach(([key, data]) => {
+    const c = document.createElement('div');
+    c.className = 'lcard';
+    c.innerHTML = `<div class="lbadge">${key}</div><div class="ldesc">${data.label}</div>`;
+    c.onclick = () => startLevel(key);
+    grid.appendChild(c);
+  });
+})();
+setTimeout(() => {
+  document.getElementById('s-levels').classList.add('active');
+  window.scrollTo(0,0);
+}, 2850);
+</script>
+</body>
+</html>
