@@ -548,6 +548,7 @@ function showLevels() {
 
 function startLevel(key) {
   lvl = key; dIdx = 0; totalScore = 0;
+  ym(109331070, 'reachGoal', 'level_started', { level: key, label: LEVELS[key].label });
   renderDialog();
 }
 
@@ -646,6 +647,20 @@ function checkAnswers() {
   totalScore += score;
   checked = true;
 
+  const answers = shuffledQs.map((q, qi) => {
+    const sel = document.querySelector(`input[name="q${qi}"]:checked`);
+    const chosen = sel ? parseInt(sel.value) : -1;
+    return { question: q.q, chosen: q.opts[chosen] || null, correct: chosen === q.correct };
+  });
+  ym(109331070, 'reachGoal', 'dialog_checked', {
+    level: lvl,
+    dialog_index: dIdx + 1,
+    dialog_title: d.title,
+    score: score,
+    total: d.questions.length,
+    answers: answers
+  });
+
   const banner = document.getElementById('score-banner');
   document.getElementById('score-text').textContent =
     `You got ${score} out of ${d.questions.length} correct on this dialog.`;
@@ -679,6 +694,14 @@ function showComplete() {
   document.getElementById('done-h').textContent = `Level ${lvl} complete!`;
   document.getElementById('done-score').textContent =
     `${totalScore} / ${total} correct — ${pct}%`;
+
+  ym(109331070, 'reachGoal', 'quiz_completed', {
+    level: lvl,
+    label: LEVELS[lvl].label,
+    score: totalScore,
+    total: total,
+    percent: pct
+  });
 
   show('s-done');
 }
